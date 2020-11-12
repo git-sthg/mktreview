@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 today = datetime.datetime.today() - datetime.timedelta(days=0)
-yearsb4 = today - datetime.timedelta(days=365*3+1)
+yearsb4 = today - datetime.timedelta(days=40*30+1) # 依据华泰金工研报，A股周期在40个月左右
 start_str = yearsb4.strftime('%Y-%m-%d')
 end_str = today.strftime('%Y-%m-%d')
 
@@ -39,39 +39,42 @@ index_pct = pd.concat(
     [get_index_daily(code, start_str, end_str) for row, code in enumerate(sw_index_spot_df['指数代码'])],
     ignore_index=True)
 print()
-# 作图
 
-x = index_pct['chg_pct']
-y = index_pct['pe']
-c = index_pct['turn_rate']
-s = (index_pct['float_mv']/min(index_pct['float_mv']))*10
-a = index_pct['index_name']
-
-fig, ax = plt.subplots(figsize=(10, 6))
-scatter = ax.scatter(x, y, c=c, s=s, alpha=0.5, cmap='cool')
-
-# 添加数据点标签
-for i in range(index_pct.shape[0]):
-    plt.annotate(a.iloc[i], xy = (x[i], y[i]), xytext = (x[i]+0.1, y[i]+0.1)) 
-# 添加颜色图例
-legend1 = ax.legend(*scatter.legend_elements(num=5),
-                    loc="lower right", bbox_to_anchor=(0.87, 0), title='换手率3年分位数(%)')
-ax.add_artist(legend1)
-# 添加大小图例
-kw = dict(prop="sizes", num=6, color=scatter.cmap(0.5),
-          func=lambda s: (s/10)*min(index_pct['float_mv']))
-legend2 = ax.legend(*scatter.legend_elements(**kw),
-                    loc="lower right", bbox_to_anchor=(1, 0), title="行业流通市值(亿元)")
-
-ax.set_xlabel('行业涨跌幅(%)', fontsize=15)
-ax.set_ylabel("PE 3年分位数(%)", fontsize=15)
-ax.set_title('申万一级行业收益分布')
-
-ax.grid(True)
-fig.tight_layout()
-save_dir = './report_daily/%s/' % today.strftime('%Y%m%d')
-if not os.path.exists(save_dir):
-    os.makedirs(save_dir)
-plt.savefig('%sindustry_%s.jpg' % (save_dir, today.strftime('%Y%m%d')))
-#plt.show()
-plt.close()
+if index_pct.shape[0] > 0:
+    # 作图
+    x = index_pct['chg_pct']
+    y = index_pct['pe']
+    c = index_pct['turn_rate']
+    s = (index_pct['float_mv']/min(index_pct['float_mv']))*10
+    a = index_pct['index_name']
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    scatter = ax.scatter(x, y, c=c, s=s, alpha=0.5, cmap='cool')
+    
+    # 添加数据点标签
+    for i in range(index_pct.shape[0]):
+        plt.annotate(a.iloc[i], xy = (x[i], y[i]), xytext = (x[i]+0.1, y[i]+0.1)) 
+    # 添加颜色图例
+    legend1 = ax.legend(*scatter.legend_elements(num=5),
+                        loc="upper right", bbox_to_anchor=(1.2, 1), title='换手率3年分位数(%)')
+    ax.add_artist(legend1)
+    # 添加大小图例
+    kw = dict(prop="sizes", num=6, color=scatter.cmap(0.5),
+              func=lambda s: (s/10)*min(index_pct['float_mv']))
+    legend2 = ax.legend(*scatter.legend_elements(**kw),
+                        loc="lower right", bbox_to_anchor=(1.2, 0), title="行业流通市值(亿元)")
+    
+    ax.set_xlabel('行业涨跌幅(%)', fontsize=15)
+    ax.set_ylabel("PE 3年分位数(%)", fontsize=15)
+    ax.set_title('申万一级行业收益分布%s' % today.strftime('%Y%m%d'))
+    
+    ax.grid(True)
+    fig.tight_layout()
+    save_dir = './report_daily/%s/' % today.strftime('%Y%m%d')
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    plt.savefig('%sindustry_%s.jpg' % (save_dir, today.strftime('%Y%m%d')))
+#    plt.show()
+    plt.close()
+else:
+    raise ValueError('无当日行情数据')
